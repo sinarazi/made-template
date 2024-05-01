@@ -10,13 +10,13 @@
 // Submit as  /exercises/exercise1.jv
 
 
-pipeline FlightsPipeline {
+pipeline AirportsPipeline {
 
     AirportsFileExtractor
     -> AirportsTextFileInterpreter
-    -> FlightsCSVInterpreter
-    -> FlightsTableInterpreter
-    -> FlightsLoader;   
+    -> AirportsCSVInterpreter
+    -> AirportsTableInterpreter
+    -> AirportsLoader;   
     
     block AirportsFileExtractor oftype HttpExtractor {
 
@@ -25,10 +25,10 @@ pipeline FlightsPipeline {
     block AirportsTextFileInterpreter oftype TextFileInterpreter {
     
     } 
-    block FlightsCSVInterpreter oftype CSVInterpreter {  
+    block AirportsCSVInterpreter oftype CSVInterpreter {  
         delimiter: ";";
     }
-    block FlightsTableInterpreter oftype TableInterpreter {  
+    block AirportsTableInterpreter oftype TableInterpreter {  
         header: true;
         columns: [
             "Lfd. Nummer" oftype integer,
@@ -46,7 +46,7 @@ pipeline FlightsPipeline {
             "geo_punkt" oftype text,
         ];
     }
-    block FlightsLoader oftype SQLiteLoader {  
+    block AirportsLoader oftype SQLiteLoader {  
         table: "airports";
         file: "./airports.sqlite";
     }
