@@ -1,0 +1,52 @@
+pipeline TreesPipeline {
+    TreesExtractor
+        -> Baumart_deutschDeleter
+        -> TreesTableInterpreter
+        -> TreesLoader;
+
+    block TreesExtractor oftype CSVExtractor {
+        url: "https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/stadt-neuss-herbstpflanzung-2023/exports/csv";
+        delimiter: ";";
+    }
+
+    block Baumart_deutschDeleter oftype ColumnDeleter {
+        delete: [ column E ];   
+    }
+
+    block TreesTableInterpreter oftype TableInterpreter {
+        header: true;
+        columns: [
+            "lfd_nr" oftype integer,
+            "stadtteil" oftype FurthStadt,
+            "standort" oftype text,
+            "baumart_botanisch" oftype text,
+            // Drop "baumart_deutsch" column
+            "baumart_deutsch" oftype text,
+            "id" oftype Id,
+            "baumfamilie" oftype text
+        ];
+    }
+
+    block TreesLoader oftype SQLiteLoader {
+        table: "trees";
+        file: "trees.sqlite";
+    }
+    
+    valuetype Id oftype text {
+        constraints: [ IdConstraint ];
+    }
+    //"id" contains geopoints with the following pattern:
+    //{geo-coordinate 1}, {geo-coordinate 2}
+    //a geo-coordinate is defined as {1-3 numbers}.{numbers}
+    constraint IdConstraint oftype RegexConstraint {
+        regex: /^\d{1,3}\.\d+, \d{1,3}\.\d+$/;
+    }
+    // custom 
+    valuetype FurthStadt oftype text {
+        constraints: [ FurthStadtConstraint ];
+    }
+    //We are only interested in Furth, valid city start with "Furth-"
+    constraint FurthStadtConstraint oftype RegexConstraint {
+        regex: /^Furth-.*/;
+    }
+}
