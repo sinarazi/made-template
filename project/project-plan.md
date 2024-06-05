@@ -1,40 +1,34 @@
 # Project Plan
 
 ## Title
-**Connecting CO2 Emissions and Climate Insights: Exploring the Relationship Between Agricultural Activities and Climate Change**
+Impact of Air Pullution on Urban Climate in London
 
 ## Main Question
-How do agricultural activities impact broader climate change indicators like temperature and sea level variations?
+How do variations in air pollution levels impact weather conditions in London from 2008 to 2018?
 
 ## Description
-This study aims to analyze the impacts of climate-related data and agricultural CO2 emissions on global environmental trends. By examining correlations and causal relationships between specific agricultural practices and broader climate metrics, the project will provide insights that could inform sustainable and efficient environmental management strategies.
+This project examines the relationship between London's air pollution levels and weather from 2008 to 2018. The goal is to examine how changes in the weather might affect air quality by using historical weather data along with pollution measurements. The project integrates data from the London Datastore and Kaggle to investigate relationships between weather patterns and pollution indices, including its impact of temperature on gasses and particle matter. Our goal is to get a deeper understanding of the environmental dynamics in metropolitan London through this study.
 
-## Datasources
-### 1. Agri-food CO2 Emission Dataset
-- **Source**: [Kaggle - Agri-food CO2 Emission Dataset](https://www.kaggle.com/datasets/alessandrolobello/agri-food-co2-emission-dataset-forecasting-ml)
-- **Data Type**: CSV
-- **License**: CC0: Public Domain
-- **Description**: This dataset includes detailed records of CO2 emissions from various agricultural activities, offering insights into the sector’s impact on climate change.
+## Data Sources
+### London Weather Data
+- **Source**: Kaggle
+- **URL**: [London Weather Data on Kaggle](https://www.kaggle.com/datasets/emmanuelfwerr/london-weather-data)
+- **Period**: 1979 - 2021
+- **Description**: This dataset includes historical weather data from London, collected from a weather station near Heathrow Airport. It features daily measurements such as temperature, humidity, and precipitation.
+- **License**: Public Domain (CC0)
 
-### 2. Climate Insights Dataset
-- **Source**: [Kaggle - Climate Insights Dataset](https://www.kaggle.com/datasets/goyaladi/climate-insights-dataset/data)
-- **Data Type**: CSV
-- **License**: CC0: Public Domain
-- **Description**: Provides comprehensive climate data, including temperature, CO2 emissions, and sea level rises, critical for analyzing global climate trends.
+### London Air Quality Levels
+- **Source**: London Datastore
+- **URL**: [London Average Air Quality Levels](https://data.london.gov.uk/dataset/london-average-air-quality-levels)
+- **Period**: Data available till 2019
+- **Description**: This dataset provides readings of air pollutants including Nitric Oxide, Nitrogen Dioxide, Particulate Matter (PM10 and PM2.5), and Ozone. Measurements are collected from various monitoring sites across Greater London.
+- **License**: UK Open Government Licence (OGL v2)
+
 
 ## Work Packages
-### 1. Data Preparation 
-
-### 2. Data Integration 
-
-### 3. Data Documentation 
-
-### 4. Climate Data Analysis 
-
-### 5. Model Prediction
-
-### 6. Post Analysis
-
-### 7. Reporting 
-
+1. **Data Preparation**: Standardize, clean, and preprocess the datasets for analysis.
+2. **Data Integration**: Merge datasets based on the timestamp to correlate weather conditions with pollution metrics.
+3. **Analytical Modeling**: Use statistical models to analyze the pollution levels.
+4. **Visualization**: Develop interactive charts and graphs to visualize trends and correlations.
+5. **Documentation and Reporting**: Prepare a detailed project report and presentation outlining the methodology, findings, and recommendations.
 
