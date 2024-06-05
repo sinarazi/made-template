@@ -1,61 +1,128 @@
 import os
 import pandas as pd
-import requests
-import zipfile
 import sqlite3
-import io
+import kaggle
+import tempfile
 
-def ensure_directory(path):
-    if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except Exception as e:
-            print(f"Error creating directory {path}: {e}")
-            exit(1)
+def setup_kaggle():
+    os.environ['KAGGLE_USERNAME'] = 'sinarazi'
+    os.environ['KAGGLE_KEY'] = '0865f43ba5a8d25429b4ff59edda698d'
 
-def download_and_process_dataset1(url, output_folder, db_path):
-    ensure_directory(output_folder)
-    response = requests.get(url)
-    with zipfile.ZipFile(io.BytesIO(response.content)) as zip_file:
-        zip_file.extractall(output_folder)
-    csv_filename = os.path.join(output_folder, zip_file.namelist()[1])
-    df = pd.read_csv(csv_filename, on_bad_lines='skip')
-    df.drop(columns=['Country', 'Location'], inplace=True)
-    df = df.loc[~(df==0).all(axis=1)]
-    df.dropna(inplace=True)
-    ensure_directory(os.path.dirname(db_path))
-    conn = sqlite3.connect(db_path)
-    df.to_sql('climate_data', conn, if_exists='replace', index=False)
-    conn.close()
+def download_and_extract_dataset(dataset_id, temp_dir):
+    """Download and extract a Kaggle dataset into a specified temporary folder."""
+    try:
+        kaggle.api.dataset_download_files(dataset_id, path=temp_dir, unzip=True)
+        print(f'Dataset downloaded and extracted to {temp_dir}')
+    except Exception as e:
+        print(f"Error downloading and extracting dataset {dataset_id}: {e}")
+        return False
+    return True
 
-def download_and_process_dataset2(url, output_folder, db_path):
-    ensure_directory(output_folder)
-    response = requests.get(url)
-    with zipfile.ZipFile(io.BytesIO(response.content)) as zip_file:
-        zip_file.extractall(output_folder)
-    csv_filename = os.path.join(output_folder, zip_file.namelist()[0])
-    df = pd.read_csv(csv_filename, on_bad_lines='skip')
-    df.drop(columns=['Area', 'IPPU', 'Fires in humid tropical forests', 'Average Temperature °C'], inplace=True)
-    df = df.loc[~(df==0).all(axis=1)]
-    df.dropna(inplace=True)
-    ensure_directory(os.path.dirname(db_path))
-    conn = sqlite3.connect(db_path)
-    df.to_sql('Agrofood_co2_emission', conn, if_exists='replace', index=False)
-    conn.close()
+def process_weather_data(temp_dir, output_folder):
+    """Process weather data from a specified folder."""
+    try:
+        csv_filename = os.path.join(temp_dir, 'london_weather.csv')
+        df = pd.read_csv(csv_filename)
+        original_rows = len(df)
+
+        df['date'] = pd.to_datetime(df['date'], format='%Y%m%d')
+        df = df[df['date'].dt.day == 1]  # Keep only the first day of each month
+        df['date'] = df['date'].dt.date  # Convert to date only
+
+        df = df[(df['date'] >= pd.to_datetime('2008-01-01').date()) & (df['date'] <= pd.to_datetime('2018-12-01').date())]
+        filtered_rows = len(df)
+        print(f"Weather Dataset - Original: {original_rows}, Filtered: {filtered_rows}")
+
+        # Save to SQLite
+        sqlite_path = os.path.join(output_folder, 'London_weather.sqlite')
+        conn = sqlite3.connect(sqlite_path)
+        df.drop(columns=['snow_depth'], inplace=True)
+        df.to_sql('weather_data', conn, if_exists='replace', index=False)
+        conn.close()
+        return df
+    except Exception as e:
+        print(f"Error processing weather data: {e}")
+        return None
+
+def process_air_quality_data(temp_dir, output_folder):
+    """Process air quality data from a specified folder."""
+    try:
+        csv_filename = os.path.join(temp_dir, 'data', 'time-of-day-per-month.csv')
+        df = pd.read_csv(csv_filename)
+        original_rows = len(df)
+
+        df.rename(columns={'Month (text)': 'date'}, inplace=True)  # Rename the column
+        df['date'] = pd.to_datetime(df['date'] + ' ' + df['GMT'])
+        df = df[df['date'].dt.hour == 14]  # Select only the 14:00 hour
+        df['date'] = df['date'].dt.date  # Keep only the date part
+
+        # Shorter column names
+        new_column_names = {
+            'London Mean Roadside Nitric Oxide (ug/m3)': 'Roadside_NO',
+            'London Mean Roadside Nitrogen Dioxide (ug/m3)': 'Roadside_NO2',
+            'London Mean Roadside Oxides of Nitrogen (ug/m3)': 'Roadside_NOx',
+            'London Mean Roadside Ozone (ug/m3)': 'Roadside_O3',
+            'London Mean Roadside PM10 Particulate (ug/m3)': 'Roadside_PM10',
+            'London Mean Roadside PM2.5 Particulate (ug/m3)': 'Roadside_PM2_5',
+            'London Mean Roadside Sulphur Dioxide (ug/m3)': 'Roadside_SO2',
+            'London Mean Background Nitric Oxide (ug/m3)': 'Background_NO',
+            'London Mean Background Nitrogen Dioxide (ug/m3)': 'Background_NO2',
+            'London Mean Background Oxides of Nitrogen (ug/m3)': 'Background_NOx',
+            'London Mean Background Ozone (ug/m3)': 'Background_O3',
+            'London Mean Background PM10 Particulate (ug/m3)': 'Background_PM10',
+            'London Mean Background PM2.5 Particulate (ug/m3)': 'Background_PM2_5',
+            'London Mean Background Sulphur Dioxide (ug/m3)': 'Background_SO2'
+        }
+        df.rename(columns=new_column_names, inplace=True)
+
+        df = df[(df['date'] >= pd.to_datetime('2008-01-01').date()) & (df['date'] <= pd.to_datetime('2018-12-01').date())]
+        filtered_rows = len(df)
+        print(f"Time of Day Dataset - Original: {original_rows}, Filtered: {filtered_rows}")
+
+        # Save to SQLite
+        sqlite_path = os.path.join(output_folder, 'London_pollution.sqlite')
+        conn = sqlite3.connect(sqlite_path)
+        df.drop(columns=['GMT'], inplace=True)  # Drop the GMT column before saving
+        df.drop(columns=['Roadside_NO'], inplace=True)
+        df.drop(columns=['Background_NO'], inplace=True)
+        df.to_sql('time_of_day_data', conn, if_exists='replace', index=False)
+        conn.close()
+
+        return df
+    except Exception as e:
+        print(f"Error processing air quality data: {e}")
+        return None
 
 def main():
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Moves up two levels from current script's directory
-    data_dir = os.path.join(base_dir, 'data')
-    project_dir = os.path.join(base_dir, 'project')
+    setup_kaggle()  
 
-    climate_url = 'https://storage.googleapis.com/kaggle-data-sets/3323659/5784613/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20240522%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20240522T143858Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=6cba02bca5e1652a8c65a17a0c99f1e7b5a376acb987a93075475a4aa689bb5f04520387cea92cf40636bfa8ac72bfc4661b41dbf2b37f3c1b3716fd04d717bee9988fed362ef81105cb5e841418834eaa9c31b361e3e4bc6f657d89676bad218168377fb6dc23db81b61737ca2143e71a1249b3075658661450a356ee01eea390ac6bcc22e69c700949e6808f26490249141a26fd392afb92c53442d5c88372f3e81ea785697daaeeca9b0b227fcf642646dd595bde70697735d84ba55ea0a029eccefc56268e8f14bd67b98a342b90f7582f9a435706edd0100979be9cd75e86e10b01106df6fe305b00e019cf6cbc3f0fc69122ebb8e8582814b2e9be2199'
+    data_dir = '../data'
+    dataset1_id = 'emmanuelfwerr/london-weather-data'
+    dataset2_id = 'zsn6034/london-air-quality'
 
-    co2_url = 'https://storage.googleapis.com/kaggle-data-sets/3526635/6149256/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20240522%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20240522T143913Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=7a8b4a5fa703177597b1bb61e6238026230311cc44226e6119824a87132538b6beebf7b60d24cae7ea544889befed13971e01ad311d0eac19328fc35786651b88860ff88cd253744548f4772ae7adf8593d78fb79a79e4d336568f2d43881c07280378518b8a14bb1f70f8f51b5663cbb05b39b7ebdecc4f68cf7616231503d27db9bd9a2b6d9770a5825e859adc88f0bf19e3bdd3c1d5be870d3308158f3cd84b5977a7f471ae31d89ca4810f5811f01b3f354c8b9dacb421b6c3770351869434d17731f6f28f58203a7deb23cfb8b9685ad3bb7f0e178bbbdae1808fdfc1850c2f69360e1ce4d26877198f6850bdd6f788ca1e012d93a7da66969981514b08'
+    with tempfile.TemporaryDirectory() as temp_dir1, tempfile.TemporaryDirectory() as temp_dir2:
+        if not download_and_extract_dataset(dataset1_id, temp_dir1):
+            print(f"Failed to download dataset {dataset1_id}")
+            return
+        if not download_and_extract_dataset(dataset2_id, temp_dir2):
+            print(f"Failed to download dataset {dataset2_id}")
+            return
 
+        df1 = process_weather_data(temp_dir1, data_dir)
+        df2 = process_air_quality_data(temp_dir2, data_dir)
 
-    download_and_process_dataset1(climate_url, os.path.join(project_dir, 'climate_data'), os.path.join(data_dir, 'climate_data.sqlite'))
-    download_and_process_dataset2(co2_url, os.path.join(project_dir, 'co2_data'), os.path.join(data_dir, 'Agrofood_co2_emission.sqlite'))
+        if df1 is not None and df2 is not None:
+            df_combined = pd.merge(df1, df2, on='date', how='inner')
+            combined_db_path = os.path.join(data_dir, 'combined_London_climate.sqlite')
+            try:
+                conn = sqlite3.connect(combined_db_path)
+                df_combined.to_sql('combined_weather_data', conn, if_exists='replace', index=False)
+                conn.close()
+                print(f"Combined data loaded into SQLite. Rows: {len(df_combined)}")
+            except Exception as e:
+                print(f"Error saving combined data to SQLite: {e}")
+        else:
+            print("Error: Failed to process one or more datasets")
 
 if __name__ == "__main__":
     main()
-
