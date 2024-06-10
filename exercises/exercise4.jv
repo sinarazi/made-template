@@ -1,0 +1,102 @@
+pipeline TemperaturesPipeline {
+    TemperaturesGTFSExtractor 
+        -> TemperatureFilePicker
+        -> TemperatureTextFileInterpreter
+        -> TemperatureCSVInterpreter
+        -> TemperatureColDataSelector
+        -> TemperaturesCellWriter1
+        -> TemperaturesCellWriter2
+        -> TemperaturesColumnDeleter
+        -> TemperaturesTableInterpreter
+        -> CelsiusToFahrenheitTemperatur
+        -> CelsiusToFahrenheitBatterietemperatur
+        -> TemperatureSQLloader;
+
+    // Download and unzip data
+    block TemperaturesGTFSExtractor oftype GTFSExtractor {
+        url: "https://www.mowesta.com/data/measure/mowesta-dataset-20221107.zip";
+    }
+
+    // Use a file FilePicker block with a path for an existing file, starting with a dot: ./data.csv
+    block TemperatureFilePicker oftype FilePicker {
+        path: "/data.csv";
+    }
+
+    block TemperatureTextFileInterpreter oftype TextFileInterpreter {
+    }
+
+    // prepration of the csv file
+    block TemperatureCSVInterpreter oftype CSVInterpreter   {
+    delimiter: ";";
+    }
+
+    // There can be multiple temperature measurements per row
+    block TemperaturesColumnDeleter oftype ColumnDeleter {
+        // You can ignore all columns to the right of the first “​​Geraet aktiv”
+        delete: [column F, column G, column H, column I];
+    }
+
+    // select columns until Geraet aktiv and remove the previous ones 
+    block TemperatureColDataSelector oftype CellRangeSelector   {
+        select: range A1:K*;
+    }
+
+    // Only use the columns "Geraet", "Hersteller", "Model", "Monat", "Temperatur in °C (DWD)", "Batterietemperatur in °C"
+    // Translate/rename column headers from German to English
+    block TemperaturesCellWriter1 oftype CellWriter {
+        at:range A1:E1; 
+        write:["id", // “Geraet” to “id”
+        "producer",  // “Hersteller” to “producer”
+        "model",     // “Model” to “model”
+        "month",     // “Monat” to “month”
+        "temperature"// “Temperatur in °C (DWD)” to “temperature”
+        ];
+    }
+
+    // It is separate since it is not the next column after temperature
+    // “Batterietemperatur in °C” to “battery_temperature”
+    block TemperaturesCellWriter2 oftype CellWriter { 
+        at:cell J1; 
+        write:["battery_temperature"];
+        }
+
+    // Use fitting SQLite types (e.g., BIGINT, TEXT or FLOAT) for all columns
+    block TemperaturesTableInterpreter oftype TableInterpreter    {
+        header: true;
+        columns: [
+        "id" oftype integer,
+        "producer" oftype text,
+        "model" oftype text,
+        "month" oftype integer,
+        "temperature" oftype decimal,
+        "battery_temperature" oftype decimal,
+        ];
+    }
+
+    // Transform data for the columns temperature and battery_temperature
+    block CelsiusToFahrenheitTemperatur oftype TableTransformer {
+    inputColumns: ['temperature',];
+    outputColumn: 'temperature';
+    use: CelsiusToFahrenheit;
+    }
+
+    block CelsiusToFahrenheitBatterietemperatur oftype TableTransformer {
+    inputColumns: ['battery_temperature',];
+    outputColumn: 'battery_temperature';
+    use: CelsiusToFahrenheit;
+    }
+
+
+    // Transform temperatures in Celsius to Fahrenheit (formula is (TemperatureInCelsius * 9/5) + 32) in place
+    transform CelsiusToFahrenheit   {
+        from Celsius oftype decimal;
+        to Fahrenheit oftype decimal;
+        Fahrenheit: (Celsius * 9/5) + 32;
+    }
+
+    // Write data into a SQLite database called “temperatures.sqlite”, in the table “temperatures”
+    block TemperatureSQLloader oftype SQLiteLoader{
+        table: 'temperatures';
+        file: 'temperatures.sqlite';
+    }
+}
