@@ -5,8 +5,11 @@ import kaggle
 import tempfile
 
 def setup_kaggle():
-    os.environ['KAGGLE_USERNAME'] = 'sinarazi'
-    os.environ['KAGGLE_KEY'] = '0865f43ba5a8d25429b4ff59edda698d'
+    """
+    Set up Kaggle API credentials from environment variables.
+    """
+    os.environ['KAGGLE_USERNAME'] = os.getenv('KAGGLE_USERNAME')
+    os.environ['KAGGLE_KEY'] = os.getenv('KAGGLE_KEY')
 
 def download_and_extract_dataset(dataset_id, temp_dir):
     """Download and extract a Kaggle dataset into a specified temporary folder."""
