@@ -32,6 +32,13 @@ jobs:
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          
+      - name: Set execute permissions and run tests
+        run: |
+          cd project
+          chmod +x tests.sh
+          ./tests.sh
+
       # store output files in the data folder
       - name: Upload output files
         uses: actions/upload-artifact@v2
