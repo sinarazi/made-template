@@ -32,3 +32,9 @@ jobs:
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      # store output files in the data folder
+      - name: Upload output files
+        uses: actions/upload-artifact@v2
+        with:
+          name: output-files
+          path: ./data/*.sqlite
