@@ -4,6 +4,15 @@ import pytest
 import pandas as pd
 import kaggle
 
+# Like the pipeline, it is defined in github secret variables.
+def setup_kaggle():
+    """
+    Set up Kaggle API credentials from environment variables.
+    """
+    os.environ['KAGGLE_USERNAME'] = os.getenv('KAGGLE_USERNAME')
+    os.environ['KAGGLE_KEY'] = os.getenv('KAGGLE_KEY')
+
+setup_kaggle()
 
 expected_files = [
     "./data/London_pollution.sqlite",
