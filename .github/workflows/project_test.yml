@@ -19,10 +19,12 @@ jobs:
           python-version: '3.8'
 
       - name: Set execute permissions for pipeline.sh
-        run: chmod +x ./pipeline.sh
+        run: |
+          chmod +x ./project/pipeline.sh
 
       - name: Run pipeline
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: ./pipeline.sh
+        run: |
+          ./project/pipeline.sh
