@@ -105,7 +105,7 @@ def process_air_quality_data(temp_dir, output_folder):
 def main():
     setup_kaggle()  
 
-    data_dir = './data'  
+    data_dir = '../data'  
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
         
