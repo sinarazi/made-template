@@ -4,6 +4,12 @@ import sqlite3
 import kaggle
 import tempfile
 
+# These variables are defined in my github secret variables. 
+# If you wanna use them in your local machine, define them in your terminal before running the code.
+"""
+$env:KAGGLE_USERNAME="your_username"
+$env:KAGGLE_KEY="your_key"
+"""
 def setup_kaggle():
     """
     Set up Kaggle API credentials from environment variables.
