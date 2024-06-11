@@ -38,6 +38,9 @@ jobs:
           cd project
           chmod +x tests.sh
           ./tests.sh
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
 
       # store output files in the data folder
       - name: Upload output files
