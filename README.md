@@ -3,6 +3,9 @@
 ![](https://byob.yarr.is/sinarazi/made-template/score_ex1) ![](https://byob.yarr.is/sinarazi/made-template/score_ex2) ![](https://byob.yarr.is/sinarazi/made-template/score_ex3) ![](https://byob.yarr.is/sinarazi/made-template/score_ex4) ![](https://byob.yarr.is/sinarazi/made-template/score_ex5)
 
 # Analysing the Impact of Air Pollution on Urban Climate in London
+![Project Image](https://github.com/sinarazi/made-template/blob/main/project/pic.jpg)
+Reference: Photo by [Unsplash](https://unsplash.com/photos/big-ben-london-during-daytime-uzbgq0WdgPQ)
+
 This project examines the relationship between London's air pollution levels and weather from 2008 to
 2018. The goal is to examine how changes in the weather might affect air quality by using historical weather
 data along with pollution measurements. The project integrates data from the London Datastore and
