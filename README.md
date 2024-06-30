@@ -26,6 +26,11 @@ made-template/
 │   └── combined_London_climate.sqlite
 ├── examples/
 ├── exercises/
+│   ├── exercise1.jv
+│   ├── exercise2.jv
+│   ├── exercise3.jv
+│   ├── exercise4.jv
+│   ├── exercise5.jv
 ├── project/
 │   ├── analysis-report.ipynb
 │   ├── analysis-report.pdf
